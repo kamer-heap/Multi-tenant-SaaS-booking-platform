@@ -1,6 +1,6 @@
 # Multi-Tenant SaaS Booking Platform
 
-A multi-tenant B2B SaaS booking platform built for the Parallax Labs Full-Stack Developer Internship (Track B). Each organization (tenant) gets its own isolated data, enforced at the database level with PostgreSQL Row-Level Security.
+A multi-tenant B2B SaaS booking platform built for the Parallax Labs Full-Stack Developer Internship (Track B). Each organization (tenant) gets its own isolated data, enforced at the database level with PostgreSQL Row-Level Security. 
 
 ## Week 1 Status: Architecture & Multi-Tenant Schema
 
