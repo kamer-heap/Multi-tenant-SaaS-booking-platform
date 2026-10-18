@@ -298,8 +298,6 @@ beside the affected form fields.
 
 ### Week 2 screenshots
 
-> Replace these placeholders with captured project screenshots.
-
 ![Bookings list view](docs/screenshots/week-2-bookings-list.png)
 
 ![Bookings calendar view](docs/screenshots/week-2-bookings-calendar.png)
