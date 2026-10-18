@@ -4,8 +4,11 @@ import Link from "next/link";
 import { AuthCard, TextField, SubmitButton, Notice } from "@/components/auth";
 import { useAuthForm } from "@/lib/useAuthForm";
 import { loginSchema } from "@/lib/validation";
+import { apiRequest } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const form = useAuthForm(loginSchema, { orgSlug: "", email: "", password: "" });
 
   return (
@@ -26,7 +29,22 @@ export default function LoginPage() {
         noValidate
         className="space-y-4"
         onSubmit={form.handleSubmit(async () => {
-          form.setMessage("Validation passed. Server login is connected in the next step.");
+          try {
+            await apiRequest("/api/auth/login", {
+              method: "POST",
+              body: JSON.stringify({
+                organization: form.values.orgSlug,
+                email: form.values.email,
+                password: form.values.password,
+              }),
+            });
+            router.push("/dashboard/bookings");
+            router.refresh();
+          } catch (error) {
+            if (!(error instanceof Error)) {
+              form.setMessage("Unable to sign in.");
+            }
+          }
         })}
       >
         <TextField label="Organization" placeholder="glow-salon" autoComplete="organization" {...form.field("orgSlug")} />

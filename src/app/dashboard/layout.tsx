@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, X, CalendarDays, LayoutDashboard, Settings } from "lucide-react";
+import { Menu, X, CalendarDays, LayoutDashboard, Settings, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/login");
+    router.refresh();
+  };
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:hidden">
@@ -33,7 +40,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <span className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-400"><LayoutDashboard className="size-4" />Overview</span>
           <span className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-400"><Settings className="size-4" />Settings</span>
         </nav>
-        <div className="absolute bottom-5 left-5 right-5 border-t border-slate-100 pt-4 text-xs text-slate-500">Workspace admin</div>
+        <div className="absolute bottom-5 left-5 right-5 border-t border-slate-100 pt-4">
+          <p className="mb-2 text-xs text-slate-500">Workspace admin</p>
+          <button onClick={logout} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+            <LogOut className="size-4" />Log out
+          </button>
+        </div>
       </aside>
       <main className="md:pl-64">{children}</main>
     </div>
