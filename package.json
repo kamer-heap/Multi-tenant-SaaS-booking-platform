@@ -12,11 +12,18 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.2",
+    "@tanstack/react-query": "^5.104.4",
     "bcryptjs": "^3.0.3",
+    "date-fns": "^4.4.0",
+    "lucide-react": "^1.59.0",
     "next": "16.4.0",
     "pg": "^8.23.1",
     "react": "19.3.0",
+    "react-big-calendar": "^1.20.0",
     "react-dom": "19.3.0",
+    "react-hook-form": "^7.90.0",
+    "sonner": "^2.0.8",
     "zod": "^4.6.5"
   },
   "devDependencies": {
@@ -24,6 +31,7 @@
     "@types/node": "^20",
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
+    "@types/react-big-calendar": "^1.16.3",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",

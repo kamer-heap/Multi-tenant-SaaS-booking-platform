@@ -1,0 +1,512 @@
+{
+  "info": {
+    "_postman_id": "f0f4f6de-3d64-4ac7-8f37-9e1c4c6a1f42",
+    "name": "Parallax Booking API",
+    "description": "Booking API requests and example responses for the multi-tenant Parallax SaaS application.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "List bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings?from=2026-10-19T00:00:00Z&to=2026-10-31T23:59:59Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-19T00:00:00Z"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-31T23:59:59Z"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Bookings returned",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"bookings\": [\n    {\n      \"id\": \"7f6c7d4e-3ef0-4d6d-9f1a-2e5f6c4a8b10\",\n      \"tenantId\": \"11111111-1111-1111-1111-111111111111\",\n      \"createdBy\": \"22222222-2222-2222-2222-222222222222\",\n      \"title\": \"Initial consultation\",\n      \"clientName\": \"Sara Malik\",\n      \"clientEmail\": \"sara.malik@example.com\",\n      \"startsAt\": \"2026-10-20T10:00:00.000Z\",\n      \"endsAt\": \"2026-10-20T11:00:00.000Z\",\n      \"status\": \"confirmed\",\n      \"notes\": \"Bring previous records\",\n      \"createdAt\": \"2026-10-19T01:00:00.000Z\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "400 - Invalid date range",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings?from=not-a-date",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "not-a-date"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Invalid date range.\",\n    \"details\": [\n      {\n        \"path\": [\"from\"],\n        \"message\": \"Invalid ISO datetime\"\n      }\n    ],\n    \"requestId\": \"6a7f6b65-c1f5-4de2-8a47-04e3ad0fd9cc\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Initial consultation\",\n  \"clientName\": \"Sara Malik\",\n  \"clientEmail\": \"sara.malik@example.com\",\n  \"startsAt\": \"2026-10-20T10:00:00Z\",\n  \"endsAt\": \"2026-10-20T11:00:00Z\",\n  \"notes\": \"Bring previous records\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "201 - Booking created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": \"7f6c7d4e-3ef0-4d6d-9f1a-2e5f6c4a8b10\",\n  \"tenantId\": \"11111111-1111-1111-1111-111111111111\",\n  \"createdBy\": \"22222222-2222-2222-2222-222222222222\",\n  \"title\": \"Initial consultation\",\n  \"clientName\": \"Sara Malik\",\n  \"clientEmail\": \"sara.malik@example.com\",\n  \"startsAt\": \"2026-10-20T10:00:00.000Z\",\n  \"endsAt\": \"2026-10-20T11:00:00.000Z\",\n  \"status\": \"confirmed\",\n  \"notes\": \"Bring previous records\",\n  \"createdAt\": \"2026-10-19T01:00:00.000Z\"\n}"
+            },
+            {
+              "name": "400 - Invalid booking data",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"title\":\"\"}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Invalid booking data.\",\n    \"details\": [\n      {\n        \"path\": [\"title\"],\n        \"message\": \"Too small: expected string to have >=1 characters\"\n      }\n    ],\n    \"requestId\": \"b4fba7b6-c6f4-4ec2-8e93-4c2f2f2a8150\"\n  }\n}"
+            },
+            {
+              "name": "409 - Booking overlaps",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"title\":\"Overlapping booking\"}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"error\": {\n    \"code\": \"CONFLICT\",\n    \"message\": \"The booking overlaps an existing booking.\",\n    \"requestId\": \"0a65e1f1-cc9a-4d8b-a6e3-4fd552a6f789\"\n  }\n}"
+            },
+            {
+              "name": "422 - Idempotency mismatch",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"title\":\"Changed request body\"}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings"
+                  ]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"error\": {\n    \"code\": \"IDEMPOTENCY_MISMATCH\",\n    \"message\": \"The Idempotency-Key was already used with a different request body.\",\n    \"requestId\": \"fe5e4e55-883d-45da-81b5-cfb0ea38a60d\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get booking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Booking returned",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "{{bookingId}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": \"7f6c7d4e-3ef0-4d6d-9f1a-2e5f6c4a8b10\",\n  \"tenantId\": \"11111111-1111-1111-1111-111111111111\",\n  \"createdBy\": \"22222222-2222-2222-2222-222222222222\",\n  \"title\": \"Initial consultation\",\n  \"clientName\": \"Sara Malik\",\n  \"clientEmail\": \"sara.malik@example.com\",\n  \"startsAt\": \"2026-10-20T10:00:00.000Z\",\n  \"endsAt\": \"2026-10-20T11:00:00.000Z\",\n  \"status\": \"confirmed\",\n  \"notes\": \"Bring previous records\",\n  \"createdAt\": \"2026-10-19T01:00:00.000Z\"\n}"
+            },
+            {
+              "name": "404 - Booking not found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "{{bookingId}}"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"Booking not found.\",\n    \"requestId\": \"1fbb1ea5-0fc2-447c-9098-4ed39ec164d\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update booking",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated consultation\",\n  \"startsAt\": \"2026-10-20T10:30:00Z\",\n  \"endsAt\": \"2026-10-20T11:30:00Z\",\n  \"notes\": \"Updated notes\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Booking updated",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "{{bookingId}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"id\": \"7f6c7d4e-3ef0-4d6d-9f1a-2e5f6c4a8b10\",\n  \"tenantId\": \"11111111-1111-1111-1111-111111111111\",\n  \"createdBy\": \"22222222-2222-2222-2222-222222222222\",\n  \"title\": \"Updated consultation\",\n  \"clientName\": \"Sara Malik\",\n  \"clientEmail\": \"sara.malik@example.com\",\n  \"startsAt\": \"2026-10-20T10:30:00.000Z\",\n  \"endsAt\": \"2026-10-20T11:30:00.000Z\",\n  \"status\": \"confirmed\",\n  \"notes\": \"Updated notes\",\n  \"createdAt\": \"2026-10-19T01:00:00.000Z\"\n}"
+            },
+            {
+              "name": "400 - Invalid update",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\"startsAt\":\"2026-10-20T12:00:00Z\",\"endsAt\":\"2026-10-20T11:00:00Z\"}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "{{bookingId}}"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Invalid booking data.\",\n    \"details\": [\n      {\n        \"path\": [\"endsAt\"],\n        \"message\": \"endsAt must be after startsAt\"\n      }\n    ],\n    \"requestId\": \"838d23ee-fc66-47f8-b4ae-5f7939d71b29\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete booking",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "bookings",
+                "{{bookingId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 - Booking deleted",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "{{bookingId}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"deleted\": true\n}"
+            },
+            {
+              "name": "404 - Booking not found",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/bookings/{{bookingId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "{{bookingId}}"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"error\": {\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"Booking not found.\",\n    \"requestId\": \"1fbb1ea5-0fc2-447c-9098-4ed39ec164d\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
