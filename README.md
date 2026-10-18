@@ -298,10 +298,8 @@ beside the affected form fields.
 
 ### Week 2 screenshots
 
-![Bookings list view](docs/screenshots/week-2-bookings-list.png)
+![Bookings list view](docs/week-2-bookings-list.png)
 
-![Bookings calendar view](docs/screenshots/week-2-bookings-calendar.png)
+![Bookings calendar view](docs/week-2-bookings-calendar.png)
 
-![Create booking drawer](docs/screenshots/week-2-create-booking.png)
-
-![Postman booking API collection](docs/screenshots/week-2-postman.png)
+![Create booking drawer](docs/week-2-create-booking.png)
