@@ -8,6 +8,7 @@ A multi-tenant B2B SaaS booking platform built for the Parallax Labs Full-Stack 
 - [x] `.env` validation with Zod
 - [x] Docker Compose for PostgreSQL (plus Mailpit for local emails)
 - [x] Multi-tenant schema (tenants, users, roles, bookings), migration runner and seed data
+- [x] Tenant-isolated booking APIs with validation, idempotency, overlap protection and standard errors
 - [x] Tenant data isolation with PostgreSQL RLS, plus an automated isolation test
 - [ ] Auth UI: Organization Onboarding, Login, Register, Password Reset (in progress)
 
@@ -73,6 +74,14 @@ Isolation is enforced by the database, not by application code, so a bug in an A
 
 `npm run test:rls` connects as `app_user` and checks that each tenant sees only its own bookings, that no tenant means no rows, and that cross-tenant deletes and inserts are blocked.
 
+## Booking API
+
+Booking routes are available at `/api/bookings` and `/api/bookings/:id`. They resolve the tenant
+from the signed `session` cookie or the tenant subdomain (an `x-tenant-slug` header is useful
+for local development), and set the RLS tenant context inside every database transaction.
+`POST /api/bookings` requires an `Idempotency-Key` header. Date filters use ISO-8601 `from` and
+`to` query parameters. Errors use `{ error: { code, message, details?, requestId } }`.
+
 ![RLS isolation test output](docs/rls-test.png)
 
 ## Getting Started
@@ -112,7 +121,7 @@ Each organization also has `admin@` and `member@` users.
 ## Project Structure
 
 ```
-db/migrations/   SQL migrations (001 schema, 002 RLS)
+db/migrations/   SQL migrations (001 schema, 002 RLS, 003 booking API constraints)
 scripts/         migrate, seed and RLS test scripts
 src/             Next.js app and Zod env validation
 docker-compose.yml

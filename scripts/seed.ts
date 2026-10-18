@@ -43,7 +43,7 @@ async function main() {
   const hash = await bcrypt.hash("Password123!", 10);
 
   await client.query("BEGIN");
-  await client.query("TRUNCATE bookings, users, tenants CASCADE");
+  await client.query("TRUNCATE idempotency_keys, bookings, users, tenants CASCADE");
   const roles = (await client.query("SELECT id, name FROM roles")).rows;
   const roleId = (n: string) => roles.find((r) => r.name === n).id;
 
