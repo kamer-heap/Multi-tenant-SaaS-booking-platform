@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { ApiError, apiErrorResponse, apiSuccess } from "@/lib/api-error";
+import { ApiError, apiErrorResponse, apiSuccess, logApiError } from "@/lib/api-error";
 import { serializeBooking, type BookingRow } from "@/lib/booking-response";
 import { createBooking } from "@/lib/schemas/booking";
 import { databaseCode, withTenant } from "@/lib/tenant-context";
@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
     });
     return apiSuccess(body, 200, requestId);
   } catch (error) {
+    logApiError(error, requestId);
     return apiErrorResponse(error, requestId);
   }
 }
@@ -98,12 +99,13 @@ export async function POST(request: NextRequest) {
 
       const result = await client.query<BookingRow>(
         `INSERT INTO bookings
-          (created_by, title, client_name, client_email, starts_at, ends_at, notes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+          (tenant_id, created_by, title, client_name, client_email, starts_at, ends_at, notes)
+         VALUES ($1, $2, $3, $4, $5, $6::timestamptz, $7::timestamptz, $8)
          RETURNING id, tenant_id, created_by, title, client_name, client_email,
                    starts_at, ends_at, status, notes, created_at`,
         [
-          session?.userId ?? null,
+          session.tenantId,
+          session.userId,
           parsed.data.title,
           parsed.data.clientName,
           parsed.data.clientEmail,
@@ -123,6 +125,7 @@ export async function POST(request: NextRequest) {
     });
     return apiSuccess(body.body, body.status, requestId);
   } catch (error) {
+    logApiError(error, requestId);
     if (databaseCode(error) === "23P01") {
       return apiErrorResponse(new ApiError("CONFLICT", "The booking overlaps an existing booking.", 409), requestId);
     }

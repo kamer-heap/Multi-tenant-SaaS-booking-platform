@@ -20,7 +20,22 @@ export class ApiError extends Error {
   }
 }
 
+export function logApiError(error: unknown, requestId?: string): void {
+  const value = error instanceof Error ? error : new Error(String(error));
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code?: unknown }).code ?? "")
+      : undefined;
+  console.error("[api-error]", {
+    requestId,
+    message: value.message,
+    code,
+    stack: value.stack,
+  });
+}
+
 export function apiErrorResponse(error: unknown, requestId = randomUUID()): Response {
+  logApiError(error, requestId);
   const apiError =
     error instanceof ApiError
       ? error
