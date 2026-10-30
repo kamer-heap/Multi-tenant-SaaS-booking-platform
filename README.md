@@ -411,7 +411,7 @@ secret keys or webhook signing secrets to the repository.
 
    ```bash
    stripe login
-   stripe listen --forward-to localhost:3000/api/webhooks/stripe
+   stripe listen --events checkout.session.completed,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.paid,invoice.payment_failed --forward-to localhost:3000/api/webhooks/stripe
    ```
 
    Copy the `whsec_...` value printed by `stripe listen` into `STRIPE_WEBHOOK_SECRET`.

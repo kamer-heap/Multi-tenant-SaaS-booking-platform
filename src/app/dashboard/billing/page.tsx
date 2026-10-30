@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Suspense } from "react";
 import { toast } from "sonner";
-import { cancelBilling, changeBillingPlan, getBillingStatus, listInvoices, type BillingPlan } from "@/lib/api";
+import { cancelBilling, changeBillingPlan, createCheckout, getBillingStatus, listInvoices, type BillingPlan } from "@/lib/api";
 
 const planOrder: BillingPlan[] = ["free", "pro", "business"];
 
@@ -76,6 +76,19 @@ function BillingContent() {
     onError: () => setBusyPlan(null),
   });
 
+  const checkout = useMutation({
+    mutationFn: createCheckout,
+    onSuccess: (result) => {
+      if (!result.url) {
+        setBusyPlan(null);
+        toast.error("Stripe did not return a checkout URL.");
+        return;
+      }
+      window.location.assign(result.url);
+    },
+    onError: () => setBusyPlan(null),
+  });
+
   const cancel = useMutation({
     mutationFn: cancelBilling,
     onSuccess: () => {
@@ -108,7 +121,7 @@ function BillingContent() {
             <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
               <h2 className="font-bold">Change plan</h2>
               <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                {(["pro", "business"] as const).map((plan) => <button key={plan} disabled={confirming || busyPlan !== null || currentIndex === planOrder.indexOf(plan)} onClick={() => { setBusyPlan(plan); changePlan.mutate(plan); }} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5 text-left text-sm font-semibold capitalize hover:border-indigo-400 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"><span>{plan}</span>{busyPlan === plan ? <LoaderCircle className="size-4 animate-spin" /> : currentIndex === planOrder.indexOf(plan) ? <span className="text-xs font-normal text-slate-400">Current</span> : <span className="text-xs font-normal text-indigo-700">{planOrder.indexOf(plan) > currentIndex ? "Upgrade" : "Downgrade"}</span>}</button>)}
+                {(["pro", "business"] as const).map((plan) => <button key={plan} disabled={confirming || busyPlan !== null || currentIndex === planOrder.indexOf(plan)} onClick={() => { setBusyPlan(plan); if (status?.subscribed && status.plan !== "free") { changePlan.mutate(plan); } else { checkout.mutate(plan); } }} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5 text-left text-sm font-semibold capitalize hover:border-indigo-400 hover:bg-indigo-50 disabled:cursor-not-allowed disabled:opacity-50"><span>{plan}</span>{busyPlan === plan ? <LoaderCircle className="size-4 animate-spin" /> : currentIndex === planOrder.indexOf(plan) ? <span className="text-xs font-normal text-slate-400">Current</span> : <span className="text-xs font-normal text-indigo-700">{planOrder.indexOf(plan) > currentIndex ? "Upgrade" : "Downgrade"}</span>}</button>)}
               </div>
               {status?.subscribed && <button disabled={cancelBusy} onClick={() => { if (confirm("Cancel your subscription at the end of the current billing period?")) { setCancelBusy(true); cancel.mutate(); } }} className="mt-4 w-full rounded-lg border border-red-200 px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50">{cancelBusy ? "Cancelling..." : "Cancel subscription"}</button>}
             </div>
