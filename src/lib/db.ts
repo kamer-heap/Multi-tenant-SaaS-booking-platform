@@ -8,6 +8,13 @@ if (!connectionString) {
 
 export const pool = new Pool({ connectionString });
 
+const privilegedConnectionString = process.env.DATABASE_URL;
+if (!privilegedConnectionString) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+export const privilegedPool = new Pool({ connectionString: privilegedConnectionString });
+
 export async function inTransaction<T>(
   tenantId: string,
   callback: (client: PoolClient) => Promise<T>,

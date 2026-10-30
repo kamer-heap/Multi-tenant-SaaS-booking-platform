@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, X, CalendarDays, LayoutDashboard, Settings, LogOut } from "lucide-react";
+import { Menu, X, CalendarDays, LayoutDashboard, Settings, LogOut, CreditCard, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
@@ -37,6 +37,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
         <nav className="space-y-1 text-sm font-medium">
           <Link href="/dashboard/bookings" className="flex items-center gap-3 rounded-lg bg-indigo-50 px-3 py-2.5 text-indigo-700"><CalendarDays className="size-4" />Bookings</Link>
+          <Link href="/dashboard/billing" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-600 hover:bg-slate-100"><CreditCard className="size-4" />Billing</Link>
+          <Link href="/pricing" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-600 hover:bg-slate-100"><Sparkles className="size-4" />Pricing</Link>
           <span className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-400"><LayoutDashboard className="size-4" />Overview</span>
           <span className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-400"><Settings className="size-4" />Settings</span>
         </nav>

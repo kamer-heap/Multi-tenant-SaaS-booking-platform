@@ -26,6 +26,12 @@ export async function withTenant<T>(
   }
 }
 
+export function requireBillingRole(session: Session): void {
+  if (session.role !== "owner" && session.role !== "admin") {
+    throw new ApiError("UNAUTHORIZED", "Only workspace owners and admins can manage billing.", 403);
+  }
+}
+
 export function databaseCode(error: unknown): string | undefined {
   return typeof error === "object" && error !== null && "code" in error
     ? (error as { code?: string }).code

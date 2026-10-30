@@ -102,3 +102,49 @@ export function updateBooking(id: string, input: UpdateBooking) {
 export function deleteBooking(id: string) {
   return apiRequest<{ deleted: true }>(`/api/bookings/${id}`, { method: "DELETE" });
 }
+
+export type BillingPlan = "free" | "pro" | "business";
+
+export type BillingStatus = {
+  plan: BillingPlan;
+  subscription_status: string | null;
+  current_period_end: string | null;
+  subscribed: boolean;
+};
+
+export type Invoice = {
+  id: string;
+  amount_paid: number;
+  currency: string | null;
+  status: string | null;
+  hosted_invoice_url: string | null;
+  created_at: string | null;
+};
+
+export function createCheckout(plan: Exclude<BillingPlan, "free">) {
+  return apiRequest<{ id: string; url: string | null }>("/api/billing/checkout", {
+    method: "POST",
+    body: JSON.stringify({ plan }),
+  });
+}
+
+export function changeBillingPlan(plan: Exclude<BillingPlan, "free">) {
+  return apiRequest<{ id: string; status: string }>("/api/billing/change-plan", {
+    method: "POST",
+    body: JSON.stringify({ plan }),
+  });
+}
+
+export function cancelBilling() {
+  return apiRequest<{ id: string; cancelAt: number | null }>("/api/billing/cancel", {
+    method: "POST",
+  });
+}
+
+export function getBillingStatus() {
+  return apiRequest<BillingStatus>("/api/billing/status");
+}
+
+export function listInvoices() {
+  return apiRequest<{ invoices: Invoice[] }>("/api/billing/invoices");
+}

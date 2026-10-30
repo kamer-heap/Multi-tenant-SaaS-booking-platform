@@ -303,3 +303,133 @@ beside the affected form fields.
 ![Bookings calendar view](docs/week-2-bookings-calendar.png)
 
 ![Create booking drawer](docs/week-2-create-booking.png)
+
+## Week 3: Stripe Subscriptions & Billing
+
+### What was built
+
+- Public `/pricing` page with Free, Pro ($29/month), and Business ($79/month) plans.
+- Stripe Checkout subscription flow with tenant metadata and customer reuse.
+- Authenticated `/dashboard/billing` page for current plan, subscription status, renewal date,
+  plan changes, cancellation, and hosted invoice links.
+- Owner/admin-only billing mutations: checkout, change plan, and cancel at period end.
+- Stripe webhook processing for subscription lifecycle events and paid or failed invoices.
+- Tenant billing fields, invoice records, and Stripe event deduplication in PostgreSQL.
+- Mobile-responsive pricing and billing interfaces using the existing dashboard layout,
+  React Query client, and Sonner toasts.
+- After checkout or a plan change, the UI polls `/api/billing/status` every two seconds for
+  up to 30 seconds and displays `Confirming with Stripe...` until the webhook updates the tenant.
+
+### Implementation approach
+
+#### Checkout
+
+`POST /api/billing/checkout` runs inside the existing tenant transaction and requires an
+owner or admin session. It creates a Stripe customer when the tenant does not have one,
+stores the resulting `stripe_customer_id`, and creates a subscription-mode Checkout Session.
+The tenant ID is included in both Checkout Session and subscription metadata. Success and
+cancel URLs are built from `APP_URL` (falling back to `NEXT_PUBLIC_APP_URL`).
+
+#### Signed webhooks
+
+`POST /api/webhooks/stripe` reads the request with `req.text()` before calling
+`stripe.webhooks.constructEvent` with `STRIPE_WEBHOOK_SECRET`. Invalid signatures return
+`400` and are never processed. Webhook database work uses the privileged database pool
+because there is no browser session or tenant RLS context on a Stripe request.
+
+The handler updates tenants for:
+
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.paid`
+- `invoice.payment_failed`
+
+Subscription events update the tenant plan, subscription ID, status, and period end.
+Invoice events upsert the invoice by Stripe invoice ID and associate it with the tenant
+through `stripe_customer_id`.
+
+#### Dedupe and retry behavior
+
+Each event ID is inserted into `stripe_events` with `ON CONFLICT DO NOTHING` before
+processing. If the event already exists, the webhook returns `200` as a duplicate without
+running its side effects again. New events are processed in the same database transaction.
+On any processing failure, the transaction is rolled back, the event row is deleted by the
+rollback, and the endpoint returns `500` so Stripe retries the event.
+
+### Billing endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/billing/checkout` | Create a Stripe Checkout subscription session |
+| `POST` | `/api/billing/change-plan` | Change the subscription price with proration |
+| `POST` | `/api/billing/cancel` | Cancel at the end of the current billing period |
+| `GET` | `/api/billing/status` | Read the current tenant plan and subscription status |
+| `GET` | `/api/billing/invoices` | List tenant invoices and hosted invoice URLs |
+| `POST` | `/api/webhooks/stripe` | Receive and verify Stripe subscription events |
+
+Billing mutation routes require a valid session and an `owner` or `admin` role. The webhook
+route is intentionally session-free and is authenticated by Stripe's signed payload.
+
+### Billing environment variables
+
+| Variable | Required | Description |
+|---|---:|---|
+| `STRIPE_SECRET_KEY` | Yes | Stripe secret API key used by server-side billing routes |
+| `STRIPE_WEBHOOK_SECRET` | Yes | Signing secret printed by `stripe listen` or configured in Stripe |
+| `STRIPE_PRICE_PRO` | Yes | Stripe recurring Price ID for the Pro plan |
+| `STRIPE_PRICE_BUSINESS` | Yes | Stripe recurring Price ID for the Business plan |
+| `APP_URL` | Recommended | Public application URL used for Checkout success/cancel redirects |
+| `NEXT_PUBLIC_APP_URL` | Fallback | Existing application URL used when `APP_URL` is not set |
+
+For local development, use Stripe test-mode keys and test-mode recurring Prices. Never commit
+secret keys or webhook signing secrets to the repository.
+
+### Run Week 3 locally
+
+1. Start PostgreSQL and apply all migrations:
+
+   ```bash
+   docker compose up -d
+   npm install
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+2. Add the Stripe variables to `.env`:
+
+   ```dotenv
+   STRIPE_SECRET_KEY=sk_test_******
+   STRIPE_WEBHOOK_SECRET=whsec_******
+   STRIPE_PRICE_PRO=price_******
+   STRIPE_PRICE_BUSINESS=price_******
+   APP_URL=http://localhost:3000
+   ```
+
+3. Install and authenticate the [Stripe CLI](https://stripe.com/docs/stripe-cli), then forward
+   test events to the local webhook:
+
+   ```bash
+   stripe login
+   stripe listen --forward-to localhost:3000/api/webhooks/stripe
+   ```
+
+   Copy the `whsec_...` value printed by `stripe listen` into `STRIPE_WEBHOOK_SECRET`.
+
+4. Start the application in another terminal:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Sign in as an owner or admin, open `/pricing`, and choose Pro or Business. Complete the
+   Stripe test Checkout flow, then return to `/dashboard/billing`. The page will show
+   `Confirming with Stripe...` while the forwarded webhook updates the tenant.
+
+### Week 3 screenshots
+
+![Pricing plans](docs/week-3-pricing.png)
+
+![Billing dashboard](docs/week-3-billing-dashboard.png)
+
+![Stripe confirmation state](docs/week-3-stripe-confirming.png)
