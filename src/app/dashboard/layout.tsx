@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { Menu, X, CalendarDays, LayoutDashboard, Settings, LogOut, CreditCard, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/login");
@@ -40,7 +41,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <Link href="/dashboard/billing" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-600 hover:bg-slate-100"><CreditCard className="size-4" />Billing</Link>
           <Link href="/pricing" className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-600 hover:bg-slate-100"><Sparkles className="size-4" />Pricing</Link>
           <span className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-400"><LayoutDashboard className="size-4" />Overview</span>
-          <span className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-400"><Settings className="size-4" />Settings</span>
+          <Link href="/dashboard/settings" className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${pathname === "/dashboard/settings" ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100"}`}><Settings className="size-4" />Settings</Link>
         </nav>
         <div className="absolute bottom-5 left-5 right-5 border-t border-slate-100 pt-4">
           <p className="mb-2 text-xs text-slate-500">Workspace admin</p>
