@@ -1,5 +1,7 @@
 import { jwtVerify, SignJWT, type JWTPayload } from "jose";
 
+export const SESSION_COOKIE = "session";
+
 export type Session = {
   userId: string;
   tenantId: string;

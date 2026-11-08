@@ -9,6 +9,7 @@ export type BookingRow = {
   ends_at: Date;
   status: string;
   notes: string;
+  notes_version?: number;
   created_at: Date;
 };
 
@@ -24,6 +25,7 @@ export function serializeBooking(row: BookingRow) {
     endsAt: row.ends_at.toISOString(),
     status: row.status,
     notes: row.notes,
+    notesVersion: row.notes_version ?? 1,
     createdAt: row.created_at.toISOString(),
   };
 }

@@ -8,6 +8,7 @@ import { format, parse, startOfWeek, getDay } from "date-fns";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { deleteBooking, listBookings, type Booking } from "@/lib/api";
 import { BookingForm } from "@/components/booking-form";
+import { CollaborativeNotesEditor } from "@/components/collaborative-notes-editor";
 
 import { enUS } from "date-fns/locale/en-US";
 
@@ -42,7 +43,7 @@ export default function BookingsPage() {
         </div>
       </div>
       {bookingsQuery.isLoading ? <BookingSkeleton /> : bookingsQuery.isError ? <EmptyState title="Unable to load bookings" text="Please refresh and try again." /> : !bookings.length ? <EmptyState title="No bookings yet" text="Create your first booking to get started." action={() => setFormOpen(true)} /> : view === "calendar" ? <CalendarView bookings={bookings} onSelect={setSelected} /> : <BookingList bookings={bookings} onSelect={setSelected} />}
-      {selected && <Drawer title="Booking details" onClose={() => setSelected(undefined)}><BookingDetail booking={selected} onEdit={() => setFormOpen(true)} onDelete={() => { if (confirm("Delete this booking?")) remove.mutate(selected.id); }} /></Drawer>}
+      {selected && <Drawer title="Booking details" onClose={() => setSelected(undefined)}><BookingDetail booking={selected} onEdit={() => setFormOpen(true)} onDelete={() => { if (confirm("Delete this booking?")) remove.mutate(selected.id); }} onNotesSynced={(update) => { setSelected((current) => current ? { ...current, notes: update.notes, notesVersion: update.version } : current); void queryClient.invalidateQueries({ queryKey: ["bookings"] }); }} /></Drawer>}
       {formOpen && <Drawer title={selected ? "Edit booking" : "Create booking"} onClose={() => { setFormOpen(false); setSelected(undefined); }}><BookingForm booking={selected} onSaved={() => { save(); setSelected(undefined); }} onCancel={() => { setFormOpen(false); setSelected(undefined); }} /></Drawer>}
     </section>
   );
@@ -56,8 +57,18 @@ function CalendarView({ bookings, onSelect }: { bookings: Booking[]; onSelect: (
   return <div className="h-[650px] rounded-xl border border-slate-200 bg-white p-2 shadow-sm"><BigCalendar localizer={localizer} events={bookings.map((booking) => ({ ...booking, title: booking.title, start: new Date(booking.startsAt), end: new Date(booking.endsAt) }))} startAccessor="start" endAccessor="end" onSelectEvent={(event) => onSelect(event as unknown as Booking)} views={["month", "week", "day"]} defaultView="month" /></div>;
 }
 
-function BookingDetail({ booking, onEdit, onDelete }: { booking: Booking; onEdit: () => void; onDelete: () => void }) {
-  return <div className="space-y-6"><div><h2 className="text-xl font-bold">{booking.title}</h2><p className="mt-1 text-sm text-slate-500">{booking.clientName} · {booking.clientEmail}</p></div><dl className="space-y-4 text-sm"><div><dt className="text-slate-500">When</dt><dd className="font-medium">{new Date(booking.startsAt).toLocaleString()} – {new Date(booking.endsAt).toLocaleTimeString()}</dd></div>{booking.notes && <div><dt className="text-slate-500">Notes</dt><dd className="whitespace-pre-wrap font-medium">{booking.notes}</dd></div>}</dl><div className="flex gap-3 border-t border-slate-100 pt-5"><button onClick={onEdit} className="flex-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Edit</button><button onClick={onDelete} className="rounded-lg border border-red-200 px-4 py-2 text-red-600 hover:bg-red-50" aria-label="Delete booking"><Trash2 className="size-4" /></button></div></div>;
+function BookingDetail({
+  booking,
+  onEdit,
+  onDelete,
+  onNotesSynced,
+}: {
+  booking: Booking;
+  onEdit: () => void;
+  onDelete: () => void;
+  onNotesSynced: (update: { notes: string; version: number }) => void;
+}) {
+  return <div className="space-y-6"><div><h2 className="text-xl font-bold">{booking.title}</h2><p className="mt-1 text-sm text-slate-500">{booking.clientName} · {booking.clientEmail}</p></div><dl className="space-y-4 text-sm"><div><dt className="text-slate-500">When</dt><dd className="font-medium">{new Date(booking.startsAt).toLocaleString()} – {new Date(booking.endsAt).toLocaleTimeString()}</dd></div></dl><div><p className="mb-2 text-sm font-medium text-slate-700">Notes</p><CollaborativeNotesEditor bookingId={booking.id} initialNotes={booking.notes} initialVersion={booking.notesVersion} onSynced={onNotesSynced} /></div><div className="flex gap-3 border-t border-slate-100 pt-5"><button onClick={onEdit} className="flex-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Edit</button><button onClick={onDelete} className="rounded-lg border border-red-200 px-4 py-2 text-red-600 hover:bg-red-50" aria-label="Delete booking"><Trash2 className="size-4" /></button></div></div>;
 }
 
 function Drawer({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {

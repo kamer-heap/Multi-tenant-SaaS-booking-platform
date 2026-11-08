@@ -74,6 +74,22 @@ Isolation is enforced by the database, not by application code, so a bug in an A
 
 `npm run test:rls` connects as `app_user` and checks that each tenant sees only its own bookings, that no tenant means no rows, and that cross-tenant deletes and inserts are blocked.
 
+### Realtime and integration tests
+
+The realtime collaboration tests start the Socket.io server on a random port and use
+isolated PostgreSQL fixtures to verify tenant room isolation, presence, typing, saves,
+disconnect presence updates, and optimistic notes conflicts.
+
+After creating `.env`, applying migrations, and starting PostgreSQL, run:
+
+```bash
+npm test
+```
+
+This runs `vitest run`. The tests require the `DATABASE_URL`, `APP_DATABASE_URL`, and
+`SESSION_SECRET` values from `.env`; apply the notes migration first with
+`npm run db:migrate`.
+
 ## Booking API
 
 Booking routes are available at `/api/bookings` and `/api/bookings/:id`. They resolve the tenant

@@ -15,8 +15,8 @@ function localValue(value?: string) {
 }
 
 function validationErrors(error: unknown, setError: (name: keyof CreateBooking, error: { message: string }) => void) {
-  if (!(error instanceof ApiClientError) || error.code !== "VALIDATION_ERROR") return;
-  for (const issue of error.details ?? []) {
+  if (!(error instanceof ApiClientError) || error.code !== "VALIDATION_ERROR" || !Array.isArray(error.details)) return;
+  for (const issue of error.details) {
     const path = issue.path?.[0];
     if (typeof path === "string" && path in createBooking.shape) {
       setError(path as keyof CreateBooking, { message: issue.message ?? "Invalid value" });

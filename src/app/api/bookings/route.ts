@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       const where = filters.length ? `AND ${filters.join(" AND ")}` : "";
       const result = await client.query<BookingRow>(
         `SELECT id, tenant_id, created_by, title, client_name, client_email,
-                starts_at, ends_at, status, notes, created_at
+                starts_at, ends_at, status, notes, notes_version, created_at
            FROM bookings
           WHERE true ${where}
           ORDER BY starts_at ASC`,
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
           (tenant_id, created_by, title, client_name, client_email, starts_at, ends_at, notes)
          VALUES ($1, $2, $3, $4, $5, $6::timestamptz, $7::timestamptz, $8)
          RETURNING id, tenant_id, created_by, title, client_name, client_email,
-                   starts_at, ends_at, status, notes, created_at`,
+                   starts_at, ends_at, status, notes, notes_version, created_at`,
         [
           session.tenantId,
           session.userId,

@@ -11,6 +11,7 @@ export type Booking = {
   endsAt: string;
   status: string;
   notes: string;
+  notesVersion: number;
   createdAt: string;
 };
 
@@ -18,7 +19,7 @@ type ApiErrorPayload = {
   error?: {
     code?: string;
     message?: string;
-    details?: Array<{ path?: Array<string | number>; message?: string }>;
+    details?: unknown;
     requestId?: string;
   };
 };
@@ -28,7 +29,7 @@ export class ApiClientError extends Error {
   constructor(
     message: string,
     public readonly code?: string,
-    public readonly details?: ApiErrorDetails,
+    public readonly details?: ApiErrorDetails | unknown,
   ) {
     super(message);
     this.name = "ApiClientError";
@@ -92,6 +93,10 @@ export function createBooking(input: CreateBooking, idempotencyKey: string) {
   });
 }
 
+export function getBooking(id: string) {
+  return apiRequest<Booking>(`/api/bookings/${id}`);
+}
+
 export function updateBooking(id: string, input: UpdateBooking) {
   return apiRequest<Booking>(`/api/bookings/${id}`, {
     method: "PATCH",
@@ -101,6 +106,15 @@ export function updateBooking(id: string, input: UpdateBooking) {
 
 export function deleteBooking(id: string) {
   return apiRequest<{ deleted: true }>(`/api/bookings/${id}`, { method: "DELETE" });
+}
+
+export type BookingNotesUpdate = { notes: string; version: number };
+
+export function updateBookingNotes(id: string, input: { notes: string; baseVersion: number }) {
+  return apiRequest<BookingNotesUpdate>(`/api/bookings/${id}/notes`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
 }
 
 export type BillingPlan = "free" | "pro" | "business";

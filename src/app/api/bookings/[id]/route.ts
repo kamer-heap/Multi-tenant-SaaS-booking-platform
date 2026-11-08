@@ -25,7 +25,7 @@ export async function GET(
     const body = await withTenant(_request, async (client) => {
       const result = await client.query<BookingRow>(
         `SELECT id, tenant_id, created_by, title, client_name, client_email,
-                starts_at, ends_at, status, notes, created_at
+                starts_at, ends_at, status, notes, notes_version, created_at
            FROM bookings WHERE id = $1`,
         [id],
       );
@@ -75,7 +75,7 @@ export async function PATCH(
         `UPDATE bookings SET ${assignments.join(", ")}
           WHERE id = $${values.length}
           RETURNING id, tenant_id, created_by, title, client_name, client_email,
-                    starts_at, ends_at, status, notes, created_at`,
+                    starts_at, ends_at, status, notes, notes_version, created_at`,
         values,
       );
       if (!result.rows[0]) throw new ApiError("NOT_FOUND", "Booking not found.", 404);
