@@ -449,3 +449,35 @@ secret keys or webhook signing secrets to the repository.
 ![Billing dashboard](docs/week-3-billing-dashboard.png)
 
 ![Stripe confirmation state](docs/week-3-stripe-confirming.png)
+## Week 4: Real-Time Collaborative Booking Notes
+
+### What was built
+- Live notes on each booking, shared by everyone in the same tenant.
+- Presence avatars showing who is viewing the booking right now.
+- Live typing indicator ("Name is typing...").
+- Save status in the UI: saving, saved, offline, or conflict.
+- Conflict handling with a version number (optimistic concurrency control).
+- Automatic reconnect and an offline banner when the network drops.
+- Automated tests for multi-user events and conflicts.
+
+### How I approached it
+- A separate Socket.io server (`realtime/server.ts`) handles live events. It checks the user's signed session cookie before they can join.
+- Each booking is a "room", and rooms are separated by tenant, so one tenant never sees another tenant's events.
+- Events: `join_booking`, `presence`, `typing`, `notes_saved`.
+- Notes are saved with `PATCH /api/bookings/:id/notes`. Every save sends the version it started from (`baseVersion`). If someone else saved first, the server rejects it as a conflict, and the user sees the newer notes instead of silently overwriting them.
+- Notes auto-save about 1 second after the user stops typing.
+- I chose version checks instead of Yjs (CRDT) because the Week 4 task allows it and it is simpler to test.
+- Migration `db/migrations/005_notes_version.sql` adds `notes_version`, `notes_updated_by` and `notes_updated_at` to `bookings`.
+
+### Run Week 4 locally
+1. Add these to `.env` (see `.env.example`):
+   `REALTIME_URL=http://localhost:4000`
+   `NEXT_PUBLIC_REALTIME_URL=http://localhost:4000`
+2. Start PostgreSQL: `docker compose up -d`
+3. Apply migrations: `npm run db:migrate`
+4. Start the app and the live server together: `npm run dev:all`
+5. Open the same booking in two browsers with two users from the same tenant. Type in one and watch the other.
+6. Run the tests: `npm test`
+
+### Week 4 screenshots
+(Add: two users on one booking showing avatars and "is typing...", the offline banner, and a conflict message.)
