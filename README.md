@@ -481,3 +481,50 @@ secret keys or webhook signing secrets to the repository.
 
 ### Week 4 screenshots
 (Add: two users on one booking showing avatars and "is typing...", the offline banner, and a conflict message.)
+
+## Week 5: Tenant Settings & Redis Cache
+
+### What was built
+- Redis caching for tenant settings with database fallback.
+- Cache invalidation whenever settings are saved.
+- Admin settings page with display name, timezone, default duration, and brand color controls.
+- Graceful fallback to PostgreSQL when Redis is unavailable.
+
+### Run Week 5 locally
+
+Start the services, including Redis:
+
+```bash
+docker compose up -d
+```
+
+Set `REDIS_URL` in `.env`:
+
+```env
+REDIS_URL=redis://localhost:6379
+```
+
+The tenant settings cache key is `tenant:<id>:settings` and cached values have a
+300-second TTL. Run the full test suite with:
+
+```bash
+npm test
+```
+
+### Read/write flow
+
+```mermaid
+flowchart TD
+    Read[Read settings] --> RedisRead{Redis cache hit?}
+    RedisRead -->|Yes| Cache[Return cached settings]
+    RedisRead -->|No or unavailable| DB[Read from PostgreSQL]
+    DB --> Populate[Populate Redis for 300s]
+    Populate --> Return[Return settings]
+    Write[Save settings] --> SaveDB[Write to PostgreSQL]
+    SaveDB --> Invalidate[Invalidate tenant cache key]
+    Invalidate --> Saved[Return saved settings]
+```
+
+### Week 5 screenshots
+
+(Add: tenant settings page, cache hit/miss badge, and Redis fallback state.)
