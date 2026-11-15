@@ -665,6 +665,4 @@ Every image file currently found in `docs/` and `docs/screenshots/`:
 - `docs/w6-health-ok.png`
 - `docs/w6-health-redis-down.png`
 
-No files currently exist in `docs/screenshots/`.
 
-Weeks 3, 4, and 5 have no screenshots yet.
