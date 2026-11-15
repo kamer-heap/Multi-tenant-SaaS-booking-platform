@@ -10,7 +10,7 @@ A multi-tenant B2B SaaS booking platform built for the Parallax Labs Full-Stack 
 - [x] Multi-tenant schema (tenants, users, roles, bookings), migration runner and seed data
 - [x] Tenant-isolated booking APIs with validation, idempotency, overlap protection and standard errors
 - [x] Tenant data isolation with PostgreSQL RLS, plus an automated isolation test
-- [ ] Auth UI: Organization Onboarding, Login, Register, Password Reset (in progress)
+- [x] Auth UI: Organization Onboarding, Login, Register, Password Reset
 
 ## Tech Stack
 
@@ -139,8 +139,13 @@ Each organization also has `admin@` and `member@` users.
 ```
 db/migrations/   SQL migrations (001 schema, 002 RLS, 003 booking API constraints)
 scripts/         migrate, seed and RLS test scripts
-src/             Next.js app and Zod env validation
-docker-compose.yml
+realtime/        Socket.io realtime server
+src/app/         Next.js routes, pages and layouts
+src/lib/         Database, Redis, auth and validation helpers
+docs/            Documentation, screenshots and API collections
+Dockerfile       Next.js multi-stage image
+Dockerfile.realtime  Realtime server image
+docker-compose.yml  Full local stack
 ```
 
 ## Approach
@@ -444,11 +449,7 @@ secret keys or webhook signing secrets to the repository.
 
 ### Week 3 screenshots
 
-![Pricing plans](docs/week-3-pricing.png)
-
-![Billing dashboard](docs/week-3-billing-dashboard.png)
-
-![Stripe confirmation state](docs/week-3-stripe-confirming.png)
+Screenshots coming soon.
 ## Week 4: Real-Time Collaborative Booking Notes
 
 ### What was built
@@ -480,7 +481,7 @@ secret keys or webhook signing secrets to the repository.
 6. Run the tests: `npm test`
 
 ### Week 4 screenshots
-(Add: two users on one booking showing avatars and "is typing...", the offline banner, and a conflict message.)
+Screenshots coming soon.
 
 ## Week 5: Tenant Settings & Redis Cache
 
@@ -527,7 +528,51 @@ flowchart TD
 
 ### Week 5 screenshots
 
-(Add: tenant settings page, cache hit/miss badge, and Redis fallback state.)
+Screenshots coming soon.
+
+## Week 6: Migrations, Docker & Polish
+
+Week 6 covers the production-readiness work across migrations, infrastructure, health
+checks, error handling, responsive UI, and the production build.
+
+### Zero-downtime migration
+
+The expand/backfill/contract workflow was tested against 100,000 seeded booking rows:
+
+```bash
+npm run db:seed:large
+npm run db:migrate:zero
+npm run test:zero-downtime
+```
+
+See [`docs/zero-downtime-migration.md`](docs/zero-downtime-migration.md) for the detailed
+procedure and traffic test.
+
+### Full-stack Docker Compose
+
+`docker compose up --build` starts the Next.js app, Socket.io realtime server, PostgreSQL,
+Redis, Mailpit, and the one-shot migration service with health-checked startup ordering.
+
+### Health check and application polish
+
+- Health endpoint: `http://localhost:3000/api/health`
+- Custom 404, 500, and global error pages
+- Friendly empty states for bookings, billing, and settings
+- Responsive audit at 360px, 768px, and 1280px
+- Mobile collapsible navigation and contained table scrolling
+- Production build with standalone output and lazy-loaded heavy components
+
+### Week 6 screenshots
+
+![Health check OK](docs/w6-health-ok.png)
+
+![Health check Redis down](docs/w6-health-redis-down.png)
+
+![Docker containers](docs/w6-docker-ps.png)
+
+![Docker app](docs/w6-docker-app.png)
+
+![404 page](docs/w6-404.png)
 
 ## Architecture
 
@@ -539,7 +584,6 @@ flowchart LR
     App --> Redis[(Redis)]
     App --> Stripe[Stripe]
     Realtime --> DB
-    Realtime --> Redis
 ```
 
 ### Tenant settings cache flow
@@ -584,8 +628,8 @@ docker compose up --build
 
 | Name | What it does | Example |
 |---|---|---|
-| `DATABASE_URL` | Application PostgreSQL connection | `postgres://app_user:example-password@db:5432/saas` |
-| `APP_DATABASE_URL` | Privileged migration and seed connection | `postgres://postgres:example-password@db:5432/saas` |
+| `DATABASE_URL` | Privileged PostgreSQL connection for migrations and seeds | `postgres://postgres:postgres@db:5432/saas` |
+| `APP_DATABASE_URL` | Limited `app_user` connection for the app and RLS | `postgres://app_user:app_password@db:5432/saas` |
 | `REDIS_URL` | Redis cache connection | `redis://redis:6379` |
 | `AUTH_SECRET` | Authentication secret | `example-auth-secret-change-me` |
 | `SESSION_SECRET` | Session signing secret | `example-session-secret-change-me` |
@@ -615,11 +659,20 @@ npm run test:rls
 npm run test:zero-downtime
 ```
 
-## Screenshots
+## Image inventory
 
-Files currently found in `docs/screenshots`:
+Every image file currently found in `docs/` and `docs/screenshots/`:
 
-- None. The directory does not currently exist.
+- `docs/rls-test.png`
+- `docs/week-2-bookings-calendar.png`
+- `docs/week-2-bookings-list.png`
+- `docs/week-2-create-booking.png`
+- `docs/w6-404.png`
+- `docs/w6-docker-app.png`
+- `docs/w6-docker-ps.png`
+- `docs/w6-health-ok.png`
+- `docs/w6-health-redis-down.png`
 
-No screenshots are available yet for Week 3: Stripe and Billing, Week 4: Live Booking
-Notes, Week 5: Redis Cache and Settings, or Week 6: Migrations, Docker and Polish.
+No files currently exist in `docs/screenshots/`.
+
+Weeks 3, 4, and 5 have no screenshots yet.
