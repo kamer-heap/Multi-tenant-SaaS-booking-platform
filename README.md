@@ -447,9 +447,6 @@ secret keys or webhook signing secrets to the repository.
    Stripe test Checkout flow, then return to `/dashboard/billing`. The page will show
    `Confirming with Stripe...` while the forwarded webhook updates the tenant.
 
-### Week 3 screenshots
-
-Screenshots coming soon.
 ## Week 4: Real-Time Collaborative Booking Notes
 
 ### What was built
@@ -480,8 +477,6 @@ Screenshots coming soon.
 5. Open the same booking in two browsers with two users from the same tenant. Type in one and watch the other.
 6. Run the tests: `npm test`
 
-### Week 4 screenshots
-Screenshots coming soon.
 
 ## Week 5: Tenant Settings & Redis Cache
 
@@ -526,9 +521,6 @@ flowchart TD
     Invalidate --> Saved[Return saved settings]
 ```
 
-### Week 5 screenshots
-
-Screenshots coming soon.
 
 ## Week 6: Migrations, Docker & Polish
 
