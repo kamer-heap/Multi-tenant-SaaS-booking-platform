@@ -74,9 +74,9 @@ export default function PricingPage() {
                 {plan.features.map((feature) => <li key={feature} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />{feature}</li>)}
               </ul>
               {!paidPlan ? (
-                <Link href="/login" className="rounded-lg border border-slate-300 px-4 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">Get started</Link>
+                <Link href="/login" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">Get started</Link>
               ) : (
-                <button onClick={() => subscribe(paidPlan)} disabled={loading !== null} className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
+                <button onClick={() => subscribe(paidPlan)} disabled={loading !== null} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
                   {loading === paidPlan && <LoaderCircle className="size-4 animate-spin" />}
                   {loading === paidPlan ? "Opening checkout..." : "Subscribe"}
                 </button>

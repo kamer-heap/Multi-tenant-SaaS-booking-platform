@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Settings2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -86,6 +86,7 @@ export function TenantSettingsForm() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [loadWarning, setLoadWarning] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
   const form = useForm<TenantSettingsInput>({
     resolver: zodResolver(tenantSettingsSchema),
     defaultValues: defaultSettings,
@@ -146,6 +147,12 @@ export function TenantSettingsForm() {
 
   const fieldError = (name: keyof TenantSettingsInput) =>
     form.formState.errors[name]?.message;
+  const isEmpty = !loading && Boolean(source) && (
+    lastKnownValues.displayName.trim() === "" &&
+    lastKnownValues.timezone === defaultSettings.timezone &&
+    lastKnownValues.defaultDurationMinutes === defaultSettings.defaultDurationMinutes &&
+    lastKnownValues.brandColor === defaultSettings.brandColor
+  );
 
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
@@ -161,9 +168,19 @@ export function TenantSettingsForm() {
         </div>
         {source && <CacheBadge source={source} />}
       </div>
-      {/* react-hook-form's submit handler manages its internal refs. */}
-      {/* eslint-disable-next-line react-hooks/refs */}
-      <form onSubmit={form.handleSubmit(submit)} className="space-y-5">
+      {isEmpty && !editing ? (
+        <div className="py-10 text-center">
+          <Settings2 className="mx-auto size-10 text-slate-300" />
+          <h3 className="mt-3 font-semibold">Your workspace is not configured</h3>
+          <p className="mt-1 text-sm text-slate-500">Add a name and preferences to personalize your booking experience.</p>
+          <button type="button" onClick={() => setEditing(true)} className="mt-5 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">
+            Configure settings
+          </button>
+        </div>
+      ) : (
+        // react-hook-form's submit handler manages its internal refs.
+        // eslint-disable-next-line react-hooks/refs
+        <form onSubmit={form.handleSubmit(submit)} className="space-y-5">
         <Field label="Display name" error={fieldError("displayName")}>
           <input {...form.register("displayName")} className={inputClass(fieldError("displayName"))} />
         </Field>
@@ -185,7 +202,7 @@ export function TenantSettingsForm() {
         </Field>
         <Field label="Brand color" error={fieldError("brandColor")}>
           <div className="flex gap-3">
-            <input type="color" value={brandColor} onChange={(event) => form.setValue("brandColor", event.target.value, { shouldValidate: true })} className="h-10 w-14 rounded-lg border border-slate-300 bg-white p-1" aria-label="Choose brand color" />
+            <input type="color" value={brandColor} onChange={(event) => form.setValue("brandColor", event.target.value, { shouldValidate: true })} className="h-11 w-14 rounded-lg border border-slate-300 bg-white p-1" aria-label="Choose brand color" />
             <input {...form.register("brandColor")} className={inputClass(fieldError("brandColor"))} />
           </div>
         </Field>
@@ -195,7 +212,7 @@ export function TenantSettingsForm() {
               Save status: {saveStatus}
             </span>
             {saveStatus === "error" && (
-              <button type="button" onClick={() => void form.handleSubmit(submit)()} className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-700">
+              <button type="button" onClick={() => void form.handleSubmit(submit)()} className="inline-flex min-h-11 items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-700">
                 <RefreshCw className="size-3.5" />Retry
               </button>
             )}
@@ -205,11 +222,12 @@ export function TenantSettingsForm() {
               </span>
             )}
           </div>
-          <button type="submit" disabled={loading || saveStatus === "saving"} className="rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="submit" disabled={loading || saveStatus === "saving"} className="min-h-11 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">
             {saveStatus === "saving" ? "Saving..." : "Save settings"}
           </button>
         </div>
-      </form>
+        </form>
+      )}
     </div>
   );
 }

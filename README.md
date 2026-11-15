@@ -110,17 +110,17 @@ cd Multi-tenant-SaaS-booking-platform
 npm install
 ```
 
-Create the env file (`copy .env.example .env` on Windows, `cp .env.example .env` on macOS/Linux), then:
+Create the env file (`copy .env.example .env` on Windows, `cp .env.example .env` on macOS/Linux), set
+the required secrets, and start the complete stack:
 
 ```bash
-docker compose up -d      # PostgreSQL + Mailpit
-npm run db:migrate        # create tables, roles and RLS policies
-npm run db:seed           # 3 sample organizations
-npm run test:rls          # verify tenant isolation
-npm run dev               # http://localhost:3000
+docker compose up --build
 ```
 
-Mailpit (password-reset emails in development) runs at http://localhost:8025.
+This starts PostgreSQL, Redis, Mailpit, the one-shot migration, the Next.js app at
+http://localhost:3000, and the realtime server at http://localhost:4000. Mailpit's web UI is
+available at http://localhost:8025. The migration service runs before the app and realtime
+containers start.
 
 ### Seed accounts
 
@@ -528,3 +528,98 @@ flowchart TD
 ### Week 5 screenshots
 
 (Add: tenant settings page, cache hit/miss badge, and Redis fallback state.)
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser[Browser] --> App[Next.js app]
+    Browser --> Realtime[Realtime server<br/>Socket.io]
+    App --> DB[(Postgres<br/>with RLS)]
+    App --> Redis[(Redis)]
+    App --> Stripe[Stripe]
+    Realtime --> DB
+    Realtime --> Redis
+```
+
+### Tenant settings cache flow
+
+```mermaid
+flowchart TD
+    Read[Read tenant settings] --> Hit{Redis cache hit?}
+    Hit -->|Yes| ReadResponse[Return cached settings]
+    Hit -->|No or Redis unavailable| ReadDB[Read from Postgres under tenant RLS]
+    ReadDB --> Cache[Store in Redis with TTL]
+    Cache --> ReadResponse
+    Write[Write tenant settings] --> WriteDB[Write to Postgres]
+    WriteDB --> Invalidate[Invalidate tenant Redis key]
+    Invalidate --> WriteResponse[Return saved settings]
+```
+
+### Zero-downtime migration flow
+
+```mermaid
+flowchart LR
+    Expand[Expand<br/>Add nullable column, index,<br/>and NOT VALID constraint]
+    Expand --> Backfill[Backfill<br/>Batches of 5000<br/>with short pauses]
+    Backfill --> Contract[Contract<br/>Validate constraint<br/>then set NOT NULL]
+    Traffic[Live application traffic] -. continues during each phase .-> Expand
+    Traffic -.-> Backfill
+    Traffic -.-> Contract
+```
+
+## One-command setup
+
+Copy `.env.example` to `.env`, then start the complete stack:
+
+```bash
+docker compose up --build
+```
+
+- Next.js app: http://localhost:3000
+- Realtime Socket.io server: http://localhost:4000
+- Mailpit: http://localhost:8025
+
+## Environment variables
+
+| Name | What it does | Example |
+|---|---|---|
+| `DATABASE_URL` | Application PostgreSQL connection | `postgres://app_user:example-password@db:5432/saas` |
+| `APP_DATABASE_URL` | Privileged migration and seed connection | `postgres://postgres:example-password@db:5432/saas` |
+| `REDIS_URL` | Redis cache connection | `redis://redis:6379` |
+| `AUTH_SECRET` | Authentication secret | `example-auth-secret-change-me` |
+| `SESSION_SECRET` | Session signing secret | `example-session-secret-change-me` |
+| `SMTP_HOST` | SMTP server hostname | `mailpit` |
+| `SMTP_PORT` | SMTP server port | `1025` |
+| `APP_URL` | Server-side app URL | `http://localhost:3000` |
+| `REALTIME_URL` | Server-side realtime URL | `http://realtime:4000` |
+| `NEXT_PUBLIC_REALTIME_URL` | Browser realtime URL | `http://localhost:4000` |
+| `STRIPE_SECRET_KEY` | Stripe server API key | `sk_test_example` |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | `whsec_example` |
+| `STRIPE_PRICE_PRO` | Stripe Pro price ID | `price_pro_example` |
+| `STRIPE_PRICE_BUSINESS` | Stripe Business price ID | `price_business_example` |
+
+These are fake example values only. Replace secrets in `.env` for local or deployed environments.
+
+## Health check
+
+Open http://localhost:3000/api/health to check the application dependencies. A `200` response
+means Postgres is healthy; Redis may be `ok` or `degraded`. A `503` response means Postgres
+is unavailable. The JSON response includes `status`, `db`, `redis`, and process `uptime`.
+
+## How to run tests
+
+```bash
+npm test
+npm run test:rls
+npm run test:zero-downtime
+```
+
+## Screenshots
+
+Files currently found in `docs/screenshots`:
+
+- None. The directory does not currently exist.
+
+No screenshots are available yet for Week 3: Stripe and Billing, Week 4: Live Booking
+Notes, Week 5: Redis Cache and Settings, or Week 6: Migrations, Docker and Polish.

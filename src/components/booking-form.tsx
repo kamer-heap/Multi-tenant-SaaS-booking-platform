@@ -77,19 +77,19 @@ export function BookingForm({
       </label>
       {error("notes") && <p className="text-xs text-red-600">{error("notes")}</p>}
       <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
-        <button type="button" onClick={onCancel} className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
-        <button disabled={saving} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving..." : booking ? "Save changes" : "Create booking"}</button>
+        <button type="button" onClick={onCancel} className="min-h-11 rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+        <button disabled={saving} className="min-h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50">{saving ? "Saving..." : booking ? "Save changes" : "Create booking"}</button>
       </div>
     </form>
   );
 }
 
 function Field({ label, error, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; error?: string }) {
-  return <label className="block text-sm font-medium text-slate-700">{label}<input {...props} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />{error && <span className="mt-1 block text-xs font-normal text-red-600">{error}</span>}</label>;
+  return <label className="block text-sm font-medium text-slate-700">{label}<input {...props} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />{error && <span className="mt-1 block text-xs font-normal text-red-600">{error}</span>}</label>;
 }
 
 function DateField({ label, name, control, error }: { label: string; name: "startsAt" | "endsAt"; control: ReturnType<typeof useForm<CreateBooking>>["control"]; error?: string }) {
-  return <Controller name={name} control={control} render={({ field }) => <label className="block text-sm font-medium text-slate-700">{label}<input type="datetime-local" value={localValue(field.value)} onChange={(event) => field.onChange(event.target.value ? new Date(event.target.value).toISOString() : "")} className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />{error && <span className="mt-1 block text-xs font-normal text-red-600">{error}</span>}</label>} />;
+  return <Controller name={name} control={control} render={({ field }) => <label className="block text-sm font-medium text-slate-700">{label}<input type="datetime-local" value={localValue(field.value)} onChange={(event) => field.onChange(event.target.value ? new Date(event.target.value).toISOString() : "")} className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100" />{error && <span className="mt-1 block text-xs font-normal text-red-600">{error}</span>}</label>} />;
 }
 
 export function FormErrorSummary({ errors }: { errors: FieldErrors<CreateBooking> }) {

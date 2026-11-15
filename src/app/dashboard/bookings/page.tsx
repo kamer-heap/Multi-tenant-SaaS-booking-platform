@@ -3,17 +3,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, CalendarDays, ChevronRight, List, Plus, Search, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
-import "react-big-calendar/lib/css/react-big-calendar.css";
 import { deleteBooking, listBookings, type Booking } from "@/lib/api";
 import { BookingForm } from "@/components/booking-form";
-import { CollaborativeNotesEditor } from "@/components/collaborative-notes-editor";
+import dynamic from "next/dynamic";
 
-import { enUS } from "date-fns/locale/en-US";
-
-const locales = { "en-US": enUS };
-const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
+const CalendarView = dynamic(() => import("@/components/booking-calendar").then((module) => module.BookingCalendar), {
+  loading: () => <div className="h-[650px] rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">Loading calendar...</div>,
+});
+const CollaborativeNotesEditor = dynamic(() => import("@/components/collaborative-notes-editor").then((module) => module.CollaborativeNotesEditor), {
+  loading: () => <div className="rounded-lg border border-slate-200 p-4 text-sm text-slate-500">Loading notes...</div>,
+});
 
 export default function BookingsPage() {
   const [view, setView] = useState<"list" | "calendar">("list");
@@ -37,9 +36,9 @@ export default function BookingsPage() {
       </div>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="relative block max-w-sm flex-1"><Search className="absolute left-3 top-2.5 size-4 text-slate-400" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search bookings..." className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-indigo-500" /></label>
-        <div className="flex rounded-lg border border-slate-200 bg-white p-1 text-sm">
-          <button onClick={() => setView("list")} className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-1.5 ${view === "list" ? "bg-slate-100 font-semibold" : "text-slate-500"}`}><List className="size-4" />List</button>
-          <button onClick={() => setView("calendar")} className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-1.5 ${view === "calendar" ? "bg-slate-100 font-semibold" : "text-slate-500"}`}><Calendar className="size-4" />Calendar</button>
+        <div className="flex w-full rounded-lg border border-slate-200 bg-white p-1 text-sm sm:w-auto">
+          <button onClick={() => setView("list")} className={`min-h-11 flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-1.5 sm:flex-none ${view === "list" ? "bg-slate-100 font-semibold" : "text-slate-500"}`}><List className="size-4" />List</button>
+          <button onClick={() => setView("calendar")} className={`min-h-11 flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-1.5 sm:flex-none ${view === "calendar" ? "bg-slate-100 font-semibold" : "text-slate-500"}`}><Calendar className="size-4" />Calendar</button>
         </div>
       </div>
       {bookingsQuery.isLoading ? <BookingSkeleton /> : bookingsQuery.isError ? <EmptyState title="Unable to load bookings" text="Please refresh and try again." /> : !bookings.length ? <EmptyState title="No bookings yet" text="Create your first booking to get started." action={() => setFormOpen(true)} /> : view === "calendar" ? <CalendarView bookings={bookings} onSelect={setSelected} /> : <BookingList bookings={bookings} onSelect={setSelected} />}
@@ -51,10 +50,6 @@ export default function BookingsPage() {
 
 function BookingList({ bookings, onSelect }: { bookings: Booking[]; onSelect: (booking: Booking) => void }) {
   return <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">{bookings.map((booking) => <button key={booking.id} onClick={() => onSelect(booking)} className="flex w-full items-center gap-4 border-b border-slate-100 p-4 text-left last:border-0 hover:bg-slate-50"><div className="flex size-11 shrink-0 flex-col items-center justify-center rounded-lg bg-indigo-50 text-indigo-700"><span className="text-xs font-semibold uppercase">{new Date(booking.startsAt).toLocaleDateString(undefined, { month: "short" })}</span><span className="text-lg font-bold">{new Date(booking.startsAt).getDate()}</span></div><div className="min-w-0 flex-1"><p className="truncate font-semibold">{booking.title}</p><p className="truncate text-sm text-slate-500">{booking.clientName} · {new Date(booking.startsAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</p></div><span className="hidden rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 sm:block">{booking.status}</span><ChevronRight className="size-4 text-slate-400" /></button>)}</div>;
-}
-
-function CalendarView({ bookings, onSelect }: { bookings: Booking[]; onSelect: (booking: Booking) => void }) {
-  return <div className="h-[650px] rounded-xl border border-slate-200 bg-white p-2 shadow-sm"><BigCalendar localizer={localizer} events={bookings.map((booking) => ({ ...booking, title: booking.title, start: new Date(booking.startsAt), end: new Date(booking.endsAt) }))} startAccessor="start" endAccessor="end" onSelectEvent={(event) => onSelect(event as unknown as Booking)} views={["month", "week", "day"]} defaultView="month" /></div>;
 }
 
 function BookingDetail({
@@ -72,7 +67,7 @@ function BookingDetail({
 }
 
 function Drawer({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return <div className="fixed inset-0 z-50 flex justify-end"><button onClick={onClose} className="absolute inset-0 bg-slate-950/30" aria-label="Close dialog" /><div className="relative h-full w-full max-w-lg overflow-y-auto bg-white p-5 shadow-2xl sm:p-7"><div className="mb-6 flex items-center justify-between"><h2 className="text-lg font-bold">{title}</h2><button onClick={onClose} className="rounded-lg p-2 hover:bg-slate-100" aria-label="Close"><X className="size-5" /></button></div>{children}</div></div>;
+  return <div className="fixed inset-0 z-50 flex justify-end"><button onClick={onClose} className="absolute inset-0 bg-slate-950/30" aria-label="Close dialog" /><div className="relative h-full w-full max-w-lg overflow-y-auto bg-white p-5 shadow-2xl sm:p-7"><div className="mb-6 flex items-center justify-between gap-4"><h2 className="min-w-0 text-lg font-bold">{title}</h2><button onClick={onClose} className="min-h-11 min-w-11 shrink-0 rounded-lg p-2 hover:bg-slate-100" aria-label="Close"><X className="size-5" /></button></div>{children}</div></div>;
 }
 
 function EmptyState({ title, text, action }: { title: string; text: string; action?: () => void }) {
